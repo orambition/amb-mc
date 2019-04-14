@@ -16,7 +16,7 @@ import java.util.UUID;
 /**
  * 传送点
  */
-public class Teleporter extends AbstractProperty<String,String> {
+public class Teleporter{
     private int id;
     private Text name;
     private Location<World> location;
@@ -79,10 +79,5 @@ public class Teleporter extends AbstractProperty<String,String> {
 
     public void setType(TeleporterTypeEnum type) {
         this.type = type;
-    }
-
-    @Override
-    public int compareTo(Property<?, ?> o) {
-        return 0;
     }
 }

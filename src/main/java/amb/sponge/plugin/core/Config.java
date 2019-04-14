@@ -1,17 +1,12 @@
 package amb.sponge.plugin.core;
 
-import com.flowpowered.math.vector.Vector3d;
-import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.ItemTypes;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.world.Location;
 
 import java.io.File;
 import java.io.IOException;
@@ -71,16 +66,19 @@ public class Config {
             configurationNode.getNode("tpbook", "itmeAddTp").setValue(TypeToken.of(ItemType.class), ItemTypes.NAME_TAG);
             configurationNode.getNode("tpbook", "itmeAllowBeTp").setValue(TypeToken.of(ItemType.class), ItemTypes.BARRIER);
             configurationNode.getNode("tpbook", "itmeDeadTp").setValue(TypeToken.of(ItemType.class), ItemTypes.SKULL);
-            configurationNode.getNode("key","ch").setValue("传送书");
+            configurationNode.getNode("tpbook", "itmeInfo").setValue(TypeToken.of(ItemType.class), ItemTypes.MAP);
+            configurationNode.getNode("key","cn").setValue("传送书");
             configurationNode.getNode("key","en").setValue("tpbook");
             configurationNode.getNode("minUseLevel").setValue(10);
             configurationNode.getNode("currency").setValue(TypeToken.of(ItemType.class), ItemTypes.EMERALD);
+            configurationNode.getNode("savedeadcount").setValue(6);
         } catch (ObjectMappingException e) {
             e.printStackTrace();
         }
     }
 
-    public static Map<String,Object> getConfigConter(){
+    public static Object getConfigConter(String key){
+
         if (null == configConter || configConter.size() ==0){
             configConter = new HashMap<>();
             configConter.put("title", configurationNode.getNode("tpbook", "title").getString());
@@ -90,16 +88,16 @@ public class Config {
                 configConter.put("itmeAddTp", configurationNode.getNode("tpbook", "itmeAddTp").getValue(TypeToken.of(ItemType.class)));
                 configConter.put("itmeAllowBeTp", configurationNode.getNode("tpbook", "itmeAllowBeTp").getValue(TypeToken.of(ItemType.class)));
                 configConter.put("itmeDeadTp", configurationNode.getNode("tpbook", "itmeDeadTp").getValue(TypeToken.of(ItemType.class)));
-                configConter.put("keyCh", configurationNode.getNode("key","ch").getString());
+                configConter.put("itmeInfo", configurationNode.getNode("tpbook", "itmeInfo").getValue(TypeToken.of(ItemType.class)));
+                configConter.put("keyCn", configurationNode.getNode("key","cn").getString());
                 configConter.put("keyEn", configurationNode.getNode("key","en").getString());
                 configConter.put("minUseLevel", configurationNode.getNode("minUseLevel").getInt());
                 configConter.put("currency", configurationNode.getNode("currency").getValue(TypeToken.of(ItemType.class)));
-
+                configConter.put("savedeadcount", configurationNode.getNode("savedeadcount").getInt());
             } catch (ObjectMappingException e) {
                 e.printStackTrace();
             }
-
         }
-        return configConter;
+        return configConter.get(key);
     }
 }

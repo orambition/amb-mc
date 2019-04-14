@@ -32,11 +32,12 @@ public class PlayerActionListener {
         ItemStackSnapshot item = event.getItemStack();
         if (item.getType() == ItemTypes.WRITTEN_BOOK) {
             String key = item.get(Keys.DISPLAY_NAME).get().toPlain();
-            if (key.equals(Config.configConter.get("keyCn").toString()) || key.equals(Config.configConter.get("keyEn").toString())){
+            if (key.equals(Config.getConfigConter("keyCn")) || key.equals(Config.getConfigConter("keyEn"))){
+                event.setCancelled(true);
                 if (player.hasPermission("tpbook.use")){
                     TPUIService.ShowTPUI(player);
                 } else {
-                    int minUseLevel = Integer.parseInt(Config.configConter.get("minUseLevel").toString());
+                    int minUseLevel = Integer.parseInt(Config.getConfigConter("minUseLevel").toString());
                     if (player.get(Keys.EXPERIENCE_LEVEL).get() < minUseLevel){
                         player.sendMessage(Text.of(minUseLevel+"级以上可以解锁传送书!"));
                     }else {

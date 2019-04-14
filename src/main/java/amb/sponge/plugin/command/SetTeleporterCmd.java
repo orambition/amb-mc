@@ -23,11 +23,11 @@ public class SetTeleporterCmd implements CommandExecutor {
         if (src instanceof Player){
             if (args.hasAny("p")){
                 // 设置公共地点
-                savePublicData((Player) src,null);
+                savePublicData((Player) src, (Text) args.getOne("地点名称").orElse(null));
                 src.sendMessage(Text.of("公共传送点已设置"));
             }else {
                 // 设置私人地点
-                savePlayerData((Player) src, null, null);
+                savePlayerData((Player) src, null, (Text) args.getOne("地点名称").orElse(null));
                 src.sendMessage(Text.of("设置传送点"));
             }
 

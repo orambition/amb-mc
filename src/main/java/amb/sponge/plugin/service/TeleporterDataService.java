@@ -1,6 +1,7 @@
 package amb.sponge.plugin.service;
 
 import amb.sponge.plugin.constant.TeleporterTypeEnum;
+import amb.sponge.plugin.core.Config;
 import amb.sponge.plugin.core.Teleporter;
 import com.flowpowered.math.vector.Vector3d;
 import com.google.common.reflect.TypeToken;
@@ -93,7 +94,7 @@ public class TeleporterDataService {
      * 获取指定玩家的开关
      * @return
      */
-    public static boolean canBeTPByPlayer(UUID uuid){
+    public static boolean notBeTPByPlayer(UUID uuid){
         return playerDataNode.getNode("Player", uuid.toString(), "NotAllowBeTp").getBoolean();
     }
 
@@ -138,7 +139,7 @@ public class TeleporterDataService {
     public static void savePlayerDeadData(Player player){
         String uuid = player.getUniqueId().toString();
         List<? extends CommentedConfigurationNode> deadNode = playerDataNode.getNode("Player", uuid, "dead","tp").getChildrenList();
-        if (deadNode.size() >= 7){
+        if (deadNode.size() >= (Integer)Config.getConfigConter("savedeadcount")){
             deadNode.remove(0);
         }
         try {

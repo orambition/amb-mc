@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="TPBook:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/SpongePluginTPBook</output-path>
+    <root id="archive" name="AmbTPBook.jar">
+      <element id="module-output" name="SpongePluginTPBook" />
+    </root>
+  </artifact>
+</component>

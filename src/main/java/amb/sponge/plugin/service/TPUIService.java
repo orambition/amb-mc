@@ -1,12 +1,11 @@
 package amb.sponge.plugin.service;
 
-import amb.sponge.plugin.constant.PluginKey;
 import amb.sponge.plugin.constant.PluginText;
 import amb.sponge.plugin.constant.TeleporterTypeEnum;
 import amb.sponge.plugin.core.Config;
 import amb.sponge.plugin.core.Teleporter;
 import amb.sponge.plugin.listeners.ClickBookListener;
-import org.checkerframework.checker.units.qual.K;
+import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.SkullTypes;
 import org.spongepowered.api.entity.living.player.Player;
@@ -37,10 +36,11 @@ public class TPUIService {
      * @param player
      */
     public static void ShowTPUI(Player player) {
+
         // 获取菜单数据
         List<Teleporter> publicTeleporters = TeleporterDataService.getPublicData();
         List<Teleporter> playerTeleporters = TeleporterDataService.getPlayerData(player.getUniqueId().toString());
-        List<GameProfile> onlineProfiles = player.getTabList().getEntries().stream().map(TabListEntry::getProfile).collect(Collectors.toList());
+        List<GameProfile> onlineProfiles = player.getTabList().getEntries().stream().map(TabListEntry::getProfile).filter(p->!TeleporterDataService.notBeTPByPlayer(p.getUniqueId()) && !p.getUniqueId().equals(player.getUniqueId())).collect(Collectors.toList());
         List<Teleporter> playerDeadTeleporters = TeleporterDataService.getPlayerDeadData(player.getUniqueId().toString());
 
         int publicTpCount = (int) Math.ceil(publicTeleporters.size()/9.0);
@@ -50,7 +50,7 @@ public class TPUIService {
         Inventory inventory = Inventory.builder()
                 .of(InventoryArchetypes.MENU_GRID)
                 .property(new InventoryTitle(Text.of("Amb传送书")))
-                .property(new InventoryDimension(9,publicTpCount + playerTpCount + olPlayerCount))
+                .property(new InventoryDimension(9,publicTpCount + playerTpCount + olPlayerCount + 1))
                 .listener(ClickInventoryEvent.class, new ClickBookListener())
                 .build(instance);
 
@@ -58,71 +58,45 @@ public class TPUIService {
         Iterator<Inventory> slotIterator = inventory.slots().iterator();
         // 创建公共菜单内容
         publicTeleporters.forEach(teleporter -> {
-            // 菜单描述
-            List<Text> itemlore = new ArrayList<>();
-            itemlore.add(Text.of("公共传送点"));
-            itemlore.add(Text.of(teleporter.getLocation().getExtent().getName()));
-            itemlore.add(Text.of("X坐标:"+teleporter.getLocation().getPosition().getFloorX()));
-            itemlore.add(Text.of("Y坐标:"+teleporter.getLocation().getPosition().getFloorY()));
-            itemlore.add(Text.of("Z坐标:"+teleporter.getLocation().getPosition().getFloorZ()));
-            itemlore.add(Text.of("创建时间:"+teleporter.getCtime()));
-            ItemStack itemStack = ItemStack.builder().itemType((ItemType) Config.configConter.get("itmePublicTp"))
-                    .add(Keys.DISPLAY_NAME, Text.of(teleporter.getName()))
-                    .add(Keys.ITEM_LORE, itemlore)
-                    .add(Keys.BOOK_AUTHOR, Text.of("GotoTeleporter"))
-                    .add(PluginKey.AMB_TELEPOTTER, teleporter)
-                    .build();
-            slotIterator.next().set(itemStack);
+            slotIterator.next().set(buildItem(teleporter, "公共地点", (ItemType) Config.getConfigConter("itmePublicTp")));
         });
         for(int i = 0; i < publicTpCount * 9 - publicTeleporters.size(); ++i)
             slotIterator.next();
         // 创建在线玩家菜单
         onlineProfiles.forEach(gameProfile -> {
-            // 菜单描述
-            Teleporter teleporter = new Teleporter();
-            teleporter.setPlayerUUID(gameProfile.getUniqueId());
-            teleporter.setType(TeleporterTypeEnum.onlinePlayer);
-            ItemStack itemStack = ItemStack.builder().itemType(ItemTypes.SKULL)
-                    .add(Keys.SKULL_TYPE, SkullTypes.PLAYER)
-                    .add(Keys.DISPLAY_NAME, Text.of(gameProfile.getName()))
-                    .add(Keys.BOOK_AUTHOR, Text.of("GotoTeleporter"))
-                    .add(PluginKey.AMB_TELEPOTTER, teleporter)
-                    .build();
-            slotIterator.next().set(itemStack);
+            if (!TeleporterDataService.notBeTPByPlayer(player.getUniqueId())){
+                // 菜单描述
+                Teleporter teleporter = new Teleporter();
+                teleporter.setPlayerUUID(gameProfile.getUniqueId());
+                teleporter.setType(TeleporterTypeEnum.onlinePlayer);
+                ItemStack itemStack = ItemStack.builder().itemType(ItemTypes.SKULL)
+                        .add(Keys.SKULL_TYPE, SkullTypes.PLAYER)
+                        .add(Keys.DISPLAY_NAME, Text.of(gameProfile.getName().get()))
+                        .add(Keys.BOOK_AUTHOR, Text.of("GotoTeleporter"))
+                        .build();
+                itemStack.setRawData(itemStack.toContainer().set(DataQuery.of("UnsafeData"),teleporter));
+                slotIterator.next().set(itemStack);
+            }
         });
         for(int i = 0; i < olPlayerCount * 9 - onlineProfiles.size(); ++i)
             slotIterator.next();
 
         // 创建私人菜单
         playerTeleporters.forEach(teleporter -> {
-            // 菜单描述
-            List<Text> itemlore = new ArrayList<>();
-            itemlore.add(Text.of("私人传送点"));
-            itemlore.add(Text.of(teleporter.getLocation().getExtent().getName()));
-            itemlore.add(Text.of("X坐标:"+teleporter.getLocation().getPosition().getFloorX()));
-            itemlore.add(Text.of("Y坐标:"+teleporter.getLocation().getPosition().getFloorY()));
-            itemlore.add(Text.of("Z坐标:"+teleporter.getLocation().getPosition().getFloorZ()));
-            itemlore.add(Text.of("创建时间:"+teleporter.getCtime()));
-            ItemStack itemStack = ItemStack.builder().itemType((ItemType) Config.configConter.get("itmePlayerTp"))
-                    .add(Keys.DISPLAY_NAME, Text.of(teleporter.getName()))
-                    .add(Keys.ITEM_LORE, itemlore)
-                    .add(Keys.BOOK_AUTHOR, Text.of("GotoTeleporter"))
-                    .add(PluginKey.AMB_TELEPOTTER, teleporter)
-                    .build();
-            slotIterator.next().set(itemStack);
+            slotIterator.next().set(buildItem(teleporter, "私人传送点", (ItemType) Config.getConfigConter("itmePlayerTp")));
         });
-        for(int i = 0; i < publicTpCount * 9 - publicTeleporters.size(); ++i)
+        for(int i = 0; i < playerTpCount * 9 - playerTeleporters.size(); ++i)
             slotIterator.next();
 
         // 创建关闭传送其他玩家传送至此菜单
         List<Text> itemlore2 = new ArrayList<>();
         itemlore2.add(Text.of("当前设置为:"));
-        if (TeleporterDataService.canBeTPByPlayer(player.getUniqueId())){
-            itemlore2.add(Text.of("允许"));
-        }else {
+        if (TeleporterDataService.notBeTPByPlayer(player.getUniqueId())){
             itemlore2.add(Text.of("不允许"));
+        }else {
+            itemlore2.add(Text.of("允许"));
         }
-        ItemStack itemStack2 = ItemStack.builder().itemType((ItemType) Config.configConter.get("itmeAllowBeTp"))
+        ItemStack itemStack2 = ItemStack.builder().itemType((ItemType) Config.getConfigConter("itmeAllowBeTp"))
                 .add(Keys.DISPLAY_NAME, Text.of("是否允许其他玩家传送到身边"))
                 .add(Keys.BOOK_AUTHOR, Text.of("AllowBeTp"))
                 .add(Keys.ITEM_LORE, itemlore2)
@@ -131,38 +105,34 @@ public class TPUIService {
 
         // 死亡地点
         playerDeadTeleporters.forEach(teleporter -> {
-            // 菜单描述
-            List<Text> itemlore = new ArrayList<>();
-            itemlore.add(Text.of("最近死亡地点"));
-            itemlore.add(Text.of(teleporter.getLocation().getExtent().getName()));
-            itemlore.add(Text.of("X坐标:"+teleporter.getLocation().getPosition().getFloorX()));
-            itemlore.add(Text.of("Y坐标:"+teleporter.getLocation().getPosition().getFloorY()));
-            itemlore.add(Text.of("Z坐标:"+teleporter.getLocation().getPosition().getFloorZ()));
-            itemlore.add(Text.of("创建时间:"+teleporter.getCtime()));
-            ItemStack itemStack = ItemStack.builder().itemType((ItemType) Config.configConter.get("itmeDeadTp"))
-                    .add(Keys.DISPLAY_NAME, Text.of(teleporter.getName()))
-                    .add(Keys.ITEM_LORE, itemlore)
-                    .add(Keys.BOOK_AUTHOR, Text.of("GotoTeleporter"))
-                    .add(PluginKey.AMB_TELEPOTTER, teleporter).build();
-            slotIterator.next().set(itemStack);
+            slotIterator.next().set(buildItem(teleporter, "最近死亡地点", (ItemType) Config.getConfigConter("itmeDeadTp")));
         });
-        for(int i = 0; i < 7 - playerDeadTeleporters.size(); ++i)
+        for(int i = 0; i < (Integer) Config.getConfigConter("savedeadcount") - playerDeadTeleporters.size(); ++i)
             slotIterator.next();
 
+        // 传送书介绍
+        ItemStack itemStack3 = ItemStack.builder().itemType((ItemType) Config.getConfigConter("itmeInfo"))
+                .add(Keys.DISPLAY_NAME, Text.of("介绍"))
+                .add(Keys.BOOK_AUTHOR, Text.of("BookInfo"))
+                .build();
+        slotIterator.next().set(itemStack3);
+
         // 创建添加地点菜单
-        List<Text> itemlore3 = new ArrayList<>();
-        itemlore3.add(Text.of("添加当前位置为新的传送点"));
+        List<Text> itemlore4 = new ArrayList<>();
+        itemlore4.add(Text.of("添加当前位置为新的传送点"));
         double pTpCount = playerTeleporters.size();
         if (pTpCount >= 1){
-            itemlore2.add(Text.of("此次操作需要消耗"+(pTpCount*pTpCount)+"颗绿宝石和20点经验"));
+            itemlore4.add(Text.of("此次操作需要消耗"+(pTpCount*pTpCount)+"颗绿宝石和20点经验"));
         }
-        ItemStack itemStack3 = ItemStack.builder().itemType((ItemType) Config.configConter.get("itmeAddTp"))
+        ItemStack itemStack4 = ItemStack.builder().itemType((ItemType) Config.getConfigConter("itmeAddTp"))
                 .add(Keys.DISPLAY_NAME, Text.of("添加传送点"))
-                .add(Keys.ITEM_LORE, itemlore3)
+                .add(Keys.ITEM_LORE, itemlore4)
                 .add(Keys.WALKING_SPEED, pTpCount*pTpCount)
                 .add(Keys.BOOK_AUTHOR, Text.of("AddTeleporter"))
                 .build();
-        slotIterator.next().set(itemStack3);
+        itemStack4.offer(Keys.BOOK_AUTHOR, Text.of("AddTeleporter"));
+        itemStack4.setRawData(itemStack4.toContainer().set(DataQuery.of("buttonType"),"AddTeleporter"));
+        slotIterator.next().set(itemStack4);
 
         player.openInventory(inventory);
     }
@@ -177,5 +147,21 @@ public class TPUIService {
                 .addPage(PluginText.bookInfo)
                 .build();
         player.sendBookView(bookView);
+    }
+    private static ItemStack buildItem(Teleporter teleporter, String str, ItemType itemType){
+        List<Text> itemlore = new ArrayList<>();
+        itemlore.add(Text.of(str));
+        itemlore.add(Text.of(teleporter.getLocation().getExtent().getName()));
+        itemlore.add(Text.of("X坐标:"+teleporter.getLocation().getPosition().getFloorX()));
+        itemlore.add(Text.of("Y坐标:"+teleporter.getLocation().getPosition().getFloorY()));
+        itemlore.add(Text.of("Z坐标:"+teleporter.getLocation().getPosition().getFloorZ()));
+        itemlore.add(Text.of("创建时间:"+teleporter.getCtime()));
+        ItemStack itemStack = ItemStack.builder().itemType(itemType)
+                .add(Keys.DISPLAY_NAME, Text.of(teleporter.getName()))
+                .add(Keys.ITEM_LORE, itemlore)
+                .add(Keys.BOOK_AUTHOR, Text.of("GotoTeleporter"))
+                .build();
+        itemStack.setRawData(itemStack.toContainer().set(DataQuery.of("UnsafeData"),teleporter));
+        return itemStack;
     }
 }

@@ -4,7 +4,7 @@ import amb.sponge.plugin.command.AllowBeTpCmd;
 import amb.sponge.plugin.command.DelTeleporterCmd;
 import amb.sponge.plugin.command.OpenTPBookCmd;
 import amb.sponge.plugin.command.SetTeleporterCmd;
-import amb.sponge.plugin.listeners.PlayerDeadListener;
+import amb.sponge.plugin.listeners.PlayerActionListener;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.spongepowered.api.Sponge;
@@ -25,7 +25,7 @@ import javax.inject.Inject;
 import java.io.File;
 import java.util.logging.Logger;
 
-@Plugin(id = "AmbTPBook", name = "Amb Server Transport Book Plugin", version = "1.0", description = "transport plugin for private server")
+@Plugin(id = "ambtpbook", name = "Amb Server Transport Book Plugin", version = "1.0", description = "transport plugin for private server")
 public class PluginCore {
 
     public static PluginCore instance;
@@ -62,31 +62,29 @@ public class PluginCore {
         instance = this;
         // 注册插件监听器
         EventManager eventManager = Sponge.getEventManager();
-        eventManager.registerListeners(this, new OpenBookListener());
-        eventManager.registerListeners(this, new PlayerDeadListener());
-
+        eventManager.registerListeners(this, new PlayerActionListener());
         // 注册插件命令
         CommandManager commandManager = Sponge.getCommandManager();
 
         CommandSpec commandSpec1 = CommandSpec.builder()
                 .description(Text.of("设置当前位置为传送点"))
-                .arguments(GenericArguments.onlyOne(GenericArguments.string(Text.of("地点名称"))),
-                        GenericArguments.flags().permissionFlag("minecraft.command.op","p").buildWith(GenericArguments.none()))
+                .arguments(GenericArguments.onlyOne(GenericArguments.string(Text.of("地点名称"))))
+                .permission("minecraft.command.op")
                 .executor(new SetTeleporterCmd()).build();
-        commandManager.register(this, commandSpec1, "setp");
+        commandManager.register(this, commandSpec1, "tpbset");
 
         CommandSpec commandSpec2 = CommandSpec.builder()
                 .description(Text.of("删除指定名称的传送点"))
-                .arguments(GenericArguments.onlyOne(GenericArguments.string(Text.of("地点id"))),
-                        GenericArguments.flags().permissionFlag("minecraft.command.op","p").buildWith(GenericArguments.none()))
+                .arguments(GenericArguments.onlyOne(GenericArguments.string(Text.of("地点id"))))
+                .permission("minecraft.command.op")
                 .executor(new DelTeleporterCmd()).build();
-        commandManager.register(this, commandSpec2, "deltp");
+        commandManager.register(this, commandSpec2, "tpbdel");
 
         CommandSpec commandSpec3 = CommandSpec.builder()
                 .description(Text.of("是否运行其他玩家传送到自己"))
                 .arguments(GenericArguments.onlyOne(GenericArguments.bool(Text.of("0=不允许|1=允许"))))
                 .executor(new AllowBeTpCmd()).build();
-        commandManager.register(this, commandSpec3, "allowbetp");
+        commandManager.register(this, commandSpec3, "tpb");
 
         CommandSpec commandSpec4 = CommandSpec.builder()
                 .description(Text.of("打开传送书界面"))
@@ -95,17 +93,6 @@ public class PluginCore {
         commandManager.register(this, commandSpec4, "opentpbook");
 
         logger.info("[TPBook]--注册命令完成");
-
-    }
-
-    /**
-     * 服务器初始化和世界加载完成
-     * @param event
-     */
-    @Listener
-    public void onServerStart(GameStartedServerEvent event){
-
-        logger.info("[TPBook]--注册命令完成!");
 
     }
 }
