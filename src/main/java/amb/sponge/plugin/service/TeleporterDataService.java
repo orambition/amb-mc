@@ -139,7 +139,7 @@ public class TeleporterDataService {
     public static void savePlayerDeadData(Player player){
         String uuid = player.getUniqueId().toString();
         List<? extends CommentedConfigurationNode> deadNode = playerDataNode.getNode("Player", uuid, "dead","tp").getChildrenList();
-        if (deadNode.size() >= (Integer)Config.getConfigConter("savedeadcount")){
+        if (deadNode.size() >= Config.maxDeadCount){
             deadNode.remove(0);
         }
         try {

@@ -2,8 +2,6 @@ package amb.sponge.plugin.core;
 
 import amb.sponge.plugin.constant.TeleporterTypeEnum;
 import com.flowpowered.math.vector.Vector3d;
-import org.spongepowered.api.data.Property;
-import org.spongepowered.api.data.property.AbstractProperty;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;

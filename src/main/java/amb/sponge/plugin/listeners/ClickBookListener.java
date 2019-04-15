@@ -4,7 +4,7 @@ import amb.sponge.plugin.constant.TeleporterTypeEnum;
 import amb.sponge.plugin.core.Teleporter;
 import amb.sponge.plugin.service.TPUIService;
 import amb.sponge.plugin.service.TeleporterDataService;
-import amb.sponge.plugin.service.TeleporterLogicService;
+import amb.sponge.plugin.facade.TeleporterLogicFacade;
 import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
@@ -50,10 +50,10 @@ public class ClickBookListener implements Consumer<ClickInventoryEvent> {
                 player.closeInventory();
             }else if (buttonType.equals("AddTeleporter")){
                 // 增加传送点
-                TeleporterLogicService.AddTeleporter(player, item.get(Keys.WALKING_SPEED).get().doubleValue());
+                TeleporterLogicFacade.AddTeleporter(player, item.get(Keys.WALKING_SPEED).get().doubleValue());
             }else if (buttonType.equals("GotoTeleporter")){
                 // 点击传送点
-                TeleporterLogicService.GotoTeleporter(player, (Teleporter) item.toContainer().get(DataQuery.of("UnsafeData")).get());
+                TeleporterLogicFacade.GotoTeleporter(player, (Teleporter) item.toContainer().get(DataQuery.of("UnsafeData")).get());
             }else if (buttonType.equals("BookInfo")){
                 TPUIService.ShowTPUI(player);
             }

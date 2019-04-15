@@ -49,7 +49,7 @@ public class TPUIService {
         // 创建菜单界面
         Inventory inventory = Inventory.builder()
                 .of(InventoryArchetypes.MENU_GRID)
-                .property(new InventoryTitle(Text.of("Amb传送书")))
+                .property(new InventoryTitle(Text.of(Config.title)))
                 .property(new InventoryDimension(9,publicTpCount + playerTpCount + olPlayerCount + 1))
                 .listener(ClickInventoryEvent.class, new ClickBookListener())
                 .build(instance);
@@ -58,7 +58,7 @@ public class TPUIService {
         Iterator<Inventory> slotIterator = inventory.slots().iterator();
         // 创建公共菜单内容
         publicTeleporters.forEach(teleporter -> {
-            slotIterator.next().set(buildItem(teleporter, "公共地点", (ItemType) Config.getConfigConter("itmePublicTp")));
+            slotIterator.next().set(buildItem(teleporter, "公共地点", Config.itmePublicTp));
         });
         for(int i = 0; i < publicTpCount * 9 - publicTeleporters.size(); ++i)
             slotIterator.next();
@@ -83,7 +83,7 @@ public class TPUIService {
 
         // 创建私人菜单
         playerTeleporters.forEach(teleporter -> {
-            slotIterator.next().set(buildItem(teleporter, "私人传送点", (ItemType) Config.getConfigConter("itmePlayerTp")));
+            slotIterator.next().set(buildItem(teleporter, "私人传送点",Config.itmePlayerTp));
         });
         for(int i = 0; i < playerTpCount * 9 - playerTeleporters.size(); ++i)
             slotIterator.next();
@@ -96,7 +96,7 @@ public class TPUIService {
         }else {
             itemlore2.add(Text.of("允许"));
         }
-        ItemStack itemStack2 = ItemStack.builder().itemType((ItemType) Config.getConfigConter("itmeAllowBeTp"))
+        ItemStack itemStack2 = ItemStack.builder().itemType(Config.itmeAllowBeTp)
                 .add(Keys.DISPLAY_NAME, Text.of("是否允许其他玩家传送到身边"))
                 .add(Keys.BOOK_AUTHOR, Text.of("AllowBeTp"))
                 .add(Keys.ITEM_LORE, itemlore2)
@@ -105,13 +105,13 @@ public class TPUIService {
 
         // 死亡地点
         playerDeadTeleporters.forEach(teleporter -> {
-            slotIterator.next().set(buildItem(teleporter, "最近死亡地点", (ItemType) Config.getConfigConter("itmeDeadTp")));
+            slotIterator.next().set(buildItem(teleporter, "最近死亡地点", Config.itmeDeadTp));
         });
-        for(int i = 0; i < (Integer) Config.getConfigConter("savedeadcount") - playerDeadTeleporters.size(); ++i)
+        for(int i = 0; i < Config.maxDeadCount - playerDeadTeleporters.size(); ++i)
             slotIterator.next();
 
         // 传送书介绍
-        ItemStack itemStack3 = ItemStack.builder().itemType((ItemType) Config.getConfigConter("itmeInfo"))
+        ItemStack itemStack3 = ItemStack.builder().itemType(Config.itmeInfo)
                 .add(Keys.DISPLAY_NAME, Text.of("介绍"))
                 .add(Keys.BOOK_AUTHOR, Text.of("BookInfo"))
                 .build();
@@ -122,9 +122,9 @@ public class TPUIService {
         itemlore4.add(Text.of("添加当前位置为新的传送点"));
         double pTpCount = playerTeleporters.size();
         if (pTpCount >= 1){
-            itemlore4.add(Text.of("此次操作需要消耗"+(pTpCount*pTpCount)+"颗绿宝石和20点经验"));
+            itemlore4.add(Text.of("此次操作需要消耗"+(pTpCount*pTpCount)+"个"+Config.currencyShowName+"和20点经验"));
         }
-        ItemStack itemStack4 = ItemStack.builder().itemType((ItemType) Config.getConfigConter("itmeAddTp"))
+        ItemStack itemStack4 = ItemStack.builder().itemType(Config.itmeAddTp)
                 .add(Keys.DISPLAY_NAME, Text.of("添加传送点"))
                 .add(Keys.ITEM_LORE, itemlore4)
                 .add(Keys.WALKING_SPEED, pTpCount*pTpCount)
@@ -148,6 +148,14 @@ public class TPUIService {
                 .build();
         player.sendBookView(bookView);
     }
+
+    /**
+     * 构建传送物品表示
+     * @param teleporter
+     * @param str
+     * @param itemType
+     * @return
+     */
     private static ItemStack buildItem(Teleporter teleporter, String str, ItemType itemType){
         List<Text> itemlore = new ArrayList<>();
         itemlore.add(Text.of(str));
