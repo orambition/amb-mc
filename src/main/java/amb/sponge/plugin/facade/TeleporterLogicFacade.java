@@ -8,7 +8,6 @@ import amb.sponge.plugin.service.TeleporterDataService;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.query.QueryOperationTypes;
@@ -18,6 +17,7 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.Tristate;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static amb.sponge.plugin.core.PluginCore.instance;
 
@@ -38,8 +38,8 @@ public class TeleporterLogicFacade {
                 player.sendMessage(Text.of(Config.minUseLevel+"级以上可以解锁传送书!"));
             }else {
                 player.getSubjectData().setPermission(SubjectData.GLOBAL_CONTEXT, "tpbook.use", Tristate.TRUE);
-                player.offer(Keys.TOTAL_EXPERIENCE,player.get(Keys.TOTAL_EXPERIENCE).get() - 30);
-                player.sendMessage(Text.of("消耗30点经验"));
+                /*player.offer(Keys.TOTAL_EXPERIENCE,player.get(Keys.TOTAL_EXPERIENCE).get() - 30);
+                player.sendMessage(Text.of("消耗30点经验"));*/
                 TPUIService.ShowBookInfo(player);
             }
         }
@@ -48,33 +48,46 @@ public class TeleporterLogicFacade {
     /**
      * 添加传送点
      * @param player
-     * @param tpCount
+     * @param cost
      */
-    public static void AddTeleporter(Player player, double tpCount){
-        if (player.get(Keys.TOTAL_EXPERIENCE).get() > 20){
-            Optional arrow = player.getInventory().query(QueryOperationTypes.ITEM_TYPE.of(Config.currency)).poll((int) tpCount);
-            if (arrow.isPresent()){
-                player.sendMessage(Text.of("消耗" + tpCount + "个" + Config.currencyShowName));
+    public static void AddTeleporter(Player player, int cost){
+        if (!player.hasPermission("tpbook.use.add")){
+            return;
+        }
+        if (player.get(Keys.TOTAL_EXPERIENCE).get() >= 20){
+            boolean canSet = false;
+            if (cost>0){
+                Optional arrow = player.getInventory().query(QueryOperationTypes.ITEM_TYPE.of(Config.currency)).poll(cost);
+                if (arrow.isPresent()) {
+                    player.sendMessage(Text.of("消耗" + cost + "个" + Config.currencyShowName));
+                    canSet = true;
+                }else {
+                    player.sendMessage(Text.of("不足" + cost + "个" + Config.currencyShowName +"无法设置传送点"));
+                }
+            }else {
+                canSet = true;
+            }
+            if (canSet){
                 player.offer(Keys.TOTAL_EXPERIENCE,player.get(Keys.TOTAL_EXPERIENCE).get() - 20);
                 player.sendMessage(Text.of("消耗20点经验"));
                 TeleporterDataService.savePlayerData(player, null, null);
                 player.sendMessage(Text.of("已添加当前位置为新的传送点"));
-            }else {
-                player.sendMessage(Text.of("不足" + tpCount + "个" + Config.currencyShowName +"无法设置传送点"));
             }
         }else {
             player.sendMessage(Text.of("经验不足20无法设置传送点"));
         }
-        player.closeInventory();
     }
 
     /**
      * 传送消耗
      */
     public static void GotoTeleporter(Player player, Teleporter teleporter){
+        if (!player.hasPermission("tpbook.use.tp") || null == teleporter){
+            return;
+        }
         boolean canGoto = false;
         if (teleporter.getType().equals(TeleporterTypeEnum.onlinePlayer)){
-            Player gotoPlayer = Sponge.getServer().getPlayer(teleporter.getPlayerUUID()).orElse(null);
+            Player gotoPlayer = Sponge.getServer().getPlayer(teleporter.getName().toPlain()).orElse(null);
             if (null == gotoPlayer){
                 player.sendMessage(Text.of("玩家不在了"));
                 return;
@@ -108,11 +121,23 @@ public class TeleporterLogicFacade {
         }
         if (canGoto){
             Task.builder().execute(() -> {
-                player.closeInventory();
                 player.setLocationSafely(teleporter.getLocation());
                 player.setRotation(teleporter.getRotation());
             }).delayTicks(1L).submit(instance);
-            player.sendMessage(Text.of("已传送至地点"+teleporter.getName()));
+            player.sendMessage(Text.of("已传送至地点"+teleporter.getName().toPlain()));
         }
+    }
+
+    /**
+     * 切换被传送开关
+     * @param player
+     * @param tpSwitch
+     */
+    public static void SwitchBeTp(Player player, boolean tpSwitch){
+        if (!player.hasPermission("tpbook.use.offtp")){
+            return;
+        }
+        TeleporterDataService.savePlayerData(player, tpSwitch, null);
+        player.sendMessage(Text.of("[允许其他玩家传送至此]开关已设置为" + (tpSwitch?"允许":"不允许")));
     }
 }

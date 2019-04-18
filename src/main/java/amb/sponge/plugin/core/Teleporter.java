@@ -6,10 +6,6 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.UUID;
-
 
 /**
  * 传送点
@@ -21,14 +17,13 @@ public class Teleporter{
     private Vector3d rotation;
     private Long ctime;
     private TeleporterTypeEnum type;
-    private UUID playerUUID;
 
-    public UUID getPlayerUUID() {
-        return playerUUID;
+    public Teleporter() {
     }
 
-    public void setPlayerUUID(UUID playerUUID) {
-        this.playerUUID = playerUUID;
+    public Teleporter(Text name, TeleporterTypeEnum type) {
+        this.name = name;
+        this.type = type;
     }
 
     public int getId() {
@@ -63,8 +58,8 @@ public class Teleporter{
         this.rotation = rotation;
     }
 
-    public String getCtime() {
-        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(ctime));
+    public Long getCtime() {
+        return ctime;
     }
 
     public void setCtime(Long ctime) {
